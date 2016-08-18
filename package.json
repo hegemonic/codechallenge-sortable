@@ -6,7 +6,7 @@
   "scripts": {
     "start": "[ -e results.txt ] && rm results.txt && node index.js || node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docs": "./node_modules/.bin/jsdoc -c ./conf.json"
+    "generate-docs": "./node_modules/.bin/jsdoc -c ./conf.json"
   },
   "keywords": [
     "code",
