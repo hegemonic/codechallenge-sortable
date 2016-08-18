@@ -1,0 +1,478 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.4.0">
+  <meta charset="utf-8">
+  <title>Source: libs/matcher.js</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-banner" role="banner">
+        </div>
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <h1>Source: libs/matcher.js</h1>
+          </header>
+          <article>
+            <pre class="prettyprint linenums"><code>&#x27;use strict&#x27;;
+
+const Manufacturer &#x3D; require(&#x27;./manufacturer&#x27;);
+const Winston &#x3D; require(&#x27;winston&#x27;);
+const Product &#x3D; require(&#x27;./product&#x27;);
+const Listing &#x3D; require(&#x27;./listing&#x27;);
+const Async &#x3D; require(&#x27;async&#x27;);
+const Fs &#x3D; require(&#x27;fs&#x27;);
+const _ &#x3D; require(&#x27;lodash&#x27;);
+
+/**
+ * @desc Class representation of a matcher tool
+ */
+class Matcher {
+  /**
+   * @desc Create a matcher
+   */
+  constructor () {
+    this.manufacturers &#x3D; [];
+    this.products &#x3D; [];
+    this.listings &#x3D; [];
+    this.unpaired &#x3D; [];
+    this.logInfo &#x3D; {
+      levels: {
+        setProducts: 0, setListings: 1,
+        createManufacturers: 2, passStart: 3,
+        passEnd: 4, write: 5, test: 6
+      },
+      colors: {
+        setProducts: &#x27;grey&#x27;, setListings: &#x27;blue&#x27;,
+        createManufacturers: &#x27;cyan&#x27;, passStart: &#x27;green&#x27;,
+        passEnd: &#x27;yellow&#x27;, write: &#x27;cyan&#x27;, test: &#x27;red&#x27;
+      }
+    };
+    this.logger &#x3D; new Winston.Logger({
+      level: &#x27;test&#x27;,
+      transports: [
+        new Winston.transports.Console({
+          colorize: true,
+          prettyPrint: true,
+          depth: 3
+        })
+      ],
+      levels: this.logInfo.levels,
+      colors: this.logInfo.colors
+    });
+  }
+
+  /**
+   * @desc Takes in an array of javascript objects of all the products
+   *       to be used. Converts all the items into an instance of type
+   *       Product.
+   * @param {Object[]} data Array of objects
+   * @returns {Product[]} - Array of Product objects
+   */
+  setProducts (data) {
+    this.logger.setProducts(&#x27;initiated&#x27;);
+    if (!data) { throw new Error(&#x27;invalid function call&#x27;); }
+    if (!Array.isArray(data)) { throw new Error(&#x27;invalid function input&#x27;); }
+    Async.each(data, (item, doneItem) &#x3D;&gt; {
+      let newProduct &#x3D; new Product(item);
+      this.products.push(newProduct);
+      doneItem(null);
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+    });
+    this.logger.setProducts(&#x27;completed&#x27;);
+    return this.products;
+  }
+
+  /**
+   * @desc Takes in array of javascript objects of all the listings to
+   *       be used. Converts all the items into an instances of type
+   *       Listing.
+   * @param {Object[]} data Array of objects
+   * @returns {Listing[]} - Array of Listing objects
+   */
+  setListings (data) {
+    this.logger.setListings(&#x27;initiated&#x27;);
+    if (!data) { throw new Error(&#x27;invalid function call&#x27;); }
+    if (!Array.isArray(data)) { throw new Error(&#x27;invalid function input&#x27;); }
+    Async.each(data, (item, doneItem) &#x3D;&gt; {
+      let newListing &#x3D; new Listing(item);
+      this.listings.push(newListing);
+      doneItem(null);
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+    });
+    this.logger.setListings(&#x27;completed&#x27;);
+    return this.listings;
+  }
+
+  /**
+   * @desc Create array of Manufacturer instances from list of products
+   * @returns {undefined}
+   */
+  createManufacturers () {
+    this.logger.createManufacturers(&#x27;initiated&#x27;);
+    if (this.products.length &#x3D;&#x3D;&#x3D; 0) {
+      throw new Error(&#x27;no prodcuts set&#x27;);
+    }
+    if (this.manufacturers.length &gt; 0) {
+      throw new Error(&#x27;already created manufacturers&#x27;);
+    }
+    Async.each(this.products, (product, doneProduct) &#x3D;&gt; {
+      Async.each(this.manufacturers, (manufacturer, doneManufacturer) &#x3D;&gt; {
+        if (manufacturer.name &#x3D;&#x3D;&#x3D; product.manufacturer) {
+          doneManufacturer(manufacturer);
+        } else {
+          doneManufacturer(null);
+        }
+      }, (foundMatch) &#x3D;&gt; {
+        if (!foundMatch) {
+          let newManufacturer &#x3D; new Manufacturer(product.manufacturer);
+          if (newManufacturer.name.split(&#x27; &#x27;).length &gt; 1) {
+            newManufacturer.isMultiWord();
+          }
+          this.manufacturers.push(newManufacturer);
+        }
+        doneProduct(null);
+      });
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+      this.logger.createManufacturers(&#x27;completed&#x27;);
+    });
+  }
+
+  /**
+   * @desc Initially matches each listings manufacturer value with the
+   *       corresponding manufacturer instances created by
+   *       &#x60;createManufacturers()&#x60;. Also creates a list of &#x27;terms&#x27; on
+   *       each listing. The title of the listing is &#x60;split()&#x60; on all
+   *       non-word characters (regex: &#x60;/\W/g&#x60;) to create the list of
+   *       &#x27;terms&#x27;.
+   * @returns {undefined}
+   */
+  firstPass () {
+    this.logger.passStart(&#x27;first&#x27;);
+    Async.each(this.listings, (listing, doneListing) &#x3D;&gt; {
+      let simpleManufacturerName &#x3D; listing.simpleManufacturerName();
+      Async.each(this.manufacturers, (manufacturer, doneManufacturer) &#x3D;&gt; {
+        if (manufacturer.getName() &#x3D;&#x3D;&#x3D; simpleManufacturerName) {
+          doneManufacturer(manufacturer);
+        } else {
+          doneManufacturer(null);
+        }
+      }, (foundMatch) &#x3D;&gt; {
+        listing.defineTerms();
+        if (foundMatch) {
+          foundMatch.listings.push(listing);
+        } else {
+          this.unpaired.push(listing);
+        }
+        doneListing(null);
+      });
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+      this.logger.passEnd(&#x27;first&#x27;);
+    });
+  }
+
+  /**
+   * @desc Goes through the unpaired listings and compares the
+   *       intersection of the list of terms with a list of manufacturers.
+   *       If the intersection has one (1) match, that listing is added
+   *       to the corresponding manufacturer instance. If the intersection
+   *       has multi matches (&gt; 1) than the array of matches is looped
+   *       over and the listing is added to each of the corresponding
+   *       manufacturer instances. If there are no matches (&amp;lt; 1) than
+   *       the listing is left in the &#x60;unparied&#x60; array list.
+   * @returns {undefined}
+   */
+  secondPass () {
+    this.logger.passStart(&#x27;second&#x27;);
+    let noMatch &#x3D; 0; // TESTING
+    let oneMatch &#x3D; 0; // TESTING
+    let multiMatch &#x3D; 0; // TESTING
+    let unpaired &#x3D; [];
+    let manufacturerList &#x3D; this.manufacturers.map(x &#x3D;&gt; x.name);
+    Async.each(this.unpaired, (listing, doneListing) &#x3D;&gt; {
+      let intersection &#x3D; _.intersection(manufacturerList, listing.terms);
+      if (intersection.length &#x3D;&#x3D;&#x3D; 0) {
+        unpaired.push(listing);
+        noMatch++;
+      }
+      if (intersection.length &#x3D;&#x3D;&#x3D; 1) {
+        this.getManufacturers(intersection).forEach((manufacturer) &#x3D;&gt; {
+          manufacturer.listings.push(listing);
+        });
+        oneMatch++;
+      }
+      if (intersection.length &gt; 1) {
+        this.getManufacturers(intersection).forEach((manufacturer) &#x3D;&gt; {
+          manufacturer.listings.push(listing);
+        });
+        multiMatch++;
+      }
+      doneListing(null);
+    }, (done) &#x3D;&gt; {
+      this.unpaired &#x3D; unpaired;
+      // this.logger.test(&#x60;&gt;&gt; noMatch: ${noMatch}, oneMatch: ${oneMatch}, mutliMatch: ${multiMatch}&#x60;);
+      // this.logger.test(&#x27;&gt;&gt; new unparied:&#x27;, this.unpaired.length);
+      this.logger.passEnd(&#x27;second&#x27;);
+    });
+  }
+  /**
+   * @desc Goes through all of the products and gets their respective
+   *       manufacturer. For each listing associated with that manufacturer
+   *       intersect the terms from each listing, with the terms from
+   *       the product. The terms from the product are a combination of
+   *       regex splits on &#x60;_&#x60; and &#x60;-&#x60;. When the intersection array
+   *       has one match (&#x3D;&#x3D; 1), the term is compared against the
+   *       manufacturer name, and if it doesnt match (!&#x3D;&#x3D;) then the
+   *       listing is added to a list of guesses on the product object
+   *       avoid irrelivant matches. If the intersection array has
+   *       multiple matches (&gt; 1), the listing is added to a list of
+   *       guesses on the product.
+   * @returns {undefined}
+   */
+  thirdPass () {
+    this.logger.passStart(&#x27;third&#x27;);
+    let noMatch &#x3D; 0; // TESTING
+    let oneMatch &#x3D; 0; // TESTING
+    let multiMatch &#x3D; 0; // TESTING
+    // let product &#x3D; this.products[4];
+    Async.each(this.products, (product, doneProduct) &#x3D;&gt; {
+      // this.logger.test(&#x27;product name:&#x27;, product.productName);
+      // this.logger.test(&#x27;search terms:&#x27;, product.parsedNameTerms().join(&#x27;, &#x27;));
+      let manufacturer &#x3D; this.getManufacturers(product.manufacturer.split())[0];
+      // this.logger.test(&#x27;associated listings:&#x27;, manufacturer.listings.length);
+      // if (product.productName &#x3D;&#x3D;&#x3D; &#x27;Fujifilm_FinePix_1500&#x27;) {
+      //   this.logger.test(&#x27;FUCKING FOUND IT&#x27;);
+      // }
+      Async.each(manufacturer.listings, (listing, doneListing) &#x3D;&gt; {
+        let intersection &#x3D; _.intersection(product.parsedNameTerms(), listing.terms);
+        if (intersection.length &#x3D;&#x3D;&#x3D; 0) {
+          noMatch++;
+        }
+        if (intersection.length &#x3D;&#x3D;&#x3D; 1) {
+          // if (product.productName &#x3D;&#x3D;&#x3D; &#x27;Fujifilm_FinePix_1500&#x27;) {
+          //   console.log(intersection, product.getManufacturer());
+          // }
+          if (intersection[0] !&#x3D;&#x3D; product.getManufacturer()) {
+            product.listingGuesses.push(listing);
+          }
+          oneMatch++;
+        }
+        if (intersection.length &gt; 1) {
+          product.listingGuesses.push(listing);
+          multiMatch++;
+        }
+        doneListing(null);
+      }, (err) &#x3D;&gt; {
+        if (err) console.log(err);
+        // this.logger.test(&#x60;${product.productName} &gt;&gt; noMatch: ${noMatch}, oneMatch: ${oneMatch}, mutliMatch: ${multiMatch}&#x60;);
+        // this.logger.test(&#x27;--------------------------------------&#x27;);
+        noMatch &#x3D; 0; // TESTING
+        oneMatch &#x3D; 0; // TESTING
+        multiMatch &#x3D; 0; // TESTING
+        doneProduct(null);
+        // console.log(product);
+      });
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+      this.logger.passEnd(&#x27;third&#x27;);
+    });
+  }
+
+  // TODO: sort through listingGuesses
+  // TODO: compare model/family against listing.defineTerms()
+  /**
+   * @desc info about 4th passStart
+   * @returns {undefined}
+   */
+  forthPass () {
+    this.logger.passStart(&#x27;forth&#x27;);
+    // INFO: setup
+    let intersection &#x3D; {};
+    // TESTING items
+    // let counts &#x3D; { noMatch: 0, oneMatch: 0, multiMatch: 0 };
+    // let matches &#x3D; {
+    //   model: Object.create(counts),
+    //   family: Object.create(counts),
+    //   both: Object.create(counts)
+    // };
+    let likelyMatch &#x3D; 0;
+    Async.each(this.products, (product, doneProduct) &#x3D;&gt; {
+      // this.logger.test(&#x27;product name:&#x27;, product.getName());
+      // this.logger.test(&#x27;product model:&#x27;, product.model);
+      // this.logger.test(&#x27;product model terms:&#x27;, product.parsedModelTerms());
+      // this.logger.test(&#x27;product family:&#x27;, product.family);
+      // this.logger.test(&#x27;product family terms:&#x27;, product.parsedFamilyTerms());
+      // this.logger.test(&#x27;product listing guesses:&#x27;, product.listingGuesses.length);
+      Async.each(product.listingGuesses, (listingGuess, doneListingGuess) &#x3D;&gt; {
+        switch (product.parsedModelTerms().length) {
+          case 1:
+            // modelTermLength &#x3D; 1
+            intersection.model &#x3D; _.intersection(product.parsedModelTerms(), listingGuess.terms);
+            if (product.parsedFamilyTerms().length) {
+              // familyTermLength &#x3D; 1 || familyTermLength &gt; 1
+              intersection.family &#x3D; _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
+              if (intersection.model.length &#x3D;&#x3D;&#x3D; 1 &amp;amp;&amp;amp; intersection.family.length &gt;&#x3D; 1) {
+                likelyMatch++;
+                product.listings.push(listingGuess);
+              }
+            } else {
+              // familyTermLength &#x3D; 0
+              if (intersection.model.length &#x3D;&#x3D;&#x3D; 1) {
+                likelyMatch++;
+                product.listings.push(listingGuess);
+              }
+            }
+            break;
+          default:
+            // modelTermLength &gt; 1
+            intersection.model &#x3D; _.intersection(product.parsedModelTerms(), listingGuess.terms);
+            if (product.parsedFamilyTerms().length) {
+              // familyTermLength &#x3D; 1 || familyTermLength &gt; 1
+              intersection.family &#x3D; _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
+              if (intersection.model.length &gt; 1 &amp;amp;&amp;amp; intersection.family.length &gt;&#x3D; 1) {
+                likelyMatch++;
+                product.listings.push(listingGuess);
+              } else if (intersection.model.length &gt; 1) {
+                likelyMatch++;
+                product.listings.push(listingGuess);
+              }
+            } else {
+              // familyTermLength &#x3D; 0
+              if (intersection.model.length &gt; 1) {
+                likelyMatch++;
+                product.listings.push(listingGuess);
+              }
+            }
+            break;
+        }
+        // TESTING BELOW
+        // intersection.model &#x3D; _.intersection(product.parsedModelTerms(), listingGuess.terms);
+        // intersection.family &#x3D; _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
+        // if (intersection.model.length &#x3D;&#x3D;&#x3D; 0) {
+        //   matches.model.noMatch++;
+        //   if (intersection.family.length &#x3D;&#x3D;&#x3D; 0) {
+        //     matches.both.noMatch++;
+        //   }
+        // }
+        // if (intersection.model.length &#x3D;&#x3D;&#x3D; 1) {
+        //   matches.model.oneMatch++;
+        //   // this.logger.test(&#x27;listingGuess&#x27;, listingGuess);
+        //   if (intersection.family.length &#x3D;&#x3D;&#x3D; 1) {
+        //     matches.both.oneMatch++;
+        //   }
+        // }
+        // if (intersection.model.length &gt; 1) {
+        //   matches.model.multiMatch++;
+        //   if (intersection.family.length &gt; 1) {
+        //     matches.both.multiMatch++;
+        //   }
+        // }
+        // if (intersection.family.length &#x3D;&#x3D;&#x3D; 0) { matches.family.noMatch++; }
+        // if (intersection.family.length &#x3D;&#x3D;&#x3D; 1) { matches.family.oneMatch++; }
+        // if (intersection.family.length &gt; 1) { matches.family.multiMatch++; }
+        doneListingGuess(null);
+      }, (err) &#x3D;&gt; {
+        if (err) console.log(err);
+        intersection &#x3D; {};
+        // TESTING BELOW
+        // this.logger.test(&#x60;MODEL &gt;&gt; noMatch: ${matches.model.noMatch}, oneMatch: ${matches.model.oneMatch}, mutliMatch: ${matches.model.multiMatch}&#x60;);
+        // this.logger.test(&#x60;FAMILY &gt;&gt; noMatch: ${matches.family.noMatch}, oneMatch: ${matches.family.oneMatch}, mutliMatch: ${matches.family.multiMatch}&#x60;);
+        // this.logger.test(&#x60;BOTH &gt;&gt; noMatch: ${matches.both.noMatch}, oneMatch: ${matches.both.oneMatch}, mutliMatch: ${matches.both.multiMatch}&#x60;);
+        // this.logger.test(&#x60;LIKELY MATCHES &gt;&gt; ${likelyMatch}&#x60;);
+        // this.logger.test(&#x27;--------------------------------------&#x27;);
+        // matches &#x3D; { model: Object.create(counts), family: Object.create(counts), both: Object.create(counts) };
+        likelyMatch &#x3D; 0;
+        doneProduct(null);
+      });
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+      this.logger.passEnd(&#x27;forth&#x27;);
+    });
+  }
+
+  /**
+   * @desc For each product, creates an item object which conform to the JSON
+   *       object spec for the challenge. Creates a file &#x60;results.txt&#x60; and
+   *       appends the &#x60;JSON.strinify&#x60; form of each of those item objects
+   *       to the file.
+   * @returns {undefined}
+   */
+  resultFile () {
+    this.logger.write(&#x27;initiated&#x27;);
+    Async.each(this.products, (product, doneProduct) &#x3D;&gt; {
+      let item &#x3D; {
+        &#x27;product_name&#x27;: product.productName,
+        &#x27;listings&#x27;: []
+      };
+      product.listings.forEach(listing &#x3D;&gt; {
+        item[&#x27;listings&#x27;].push(listing.getData());
+      });
+      // TODO: append created object to results.json file
+      Fs.appendFile(&#x27;results.txt&#x27;,
+        JSON.stringify(item) + &#x27;\n&#x27;,
+        { encoding: &#x27;utf8&#x27; },
+        doneProduct
+      );
+    }, (err) &#x3D;&gt; {
+      if (err) console.log(err);
+      this.logger.write(&#x27;completed&#x27;);
+    });
+  }
+
+  // INFO: Below are helper functions attached to this object.
+  /**
+   * @desc Returns a list of Manufacturer instances that have a name that matches
+   *       the given list in &#x60;data&#x60;.
+   * @param {String[]} data Array of manufacturer names
+   * @returns {Manufacturer[]} - An array of Manufacturer instances
+   */
+  getManufacturers (data) {
+    let output &#x3D; [];
+    data.forEach((name) &#x3D;&gt; {
+      this.manufacturers.forEach((manufacturer) &#x3D;&gt; {
+        if (manufacturer.getName() &#x3D;&#x3D;&#x3D; name.toLowerCase()) {
+          output.push(manufacturer);
+        }
+      });
+    });
+    return output;
+  }
+}
+
+module.exports &#x3D; Matcher;
+</code></pre>
+          </article>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>

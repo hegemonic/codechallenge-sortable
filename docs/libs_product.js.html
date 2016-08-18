@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.4.0">
+  <meta charset="utf-8">
+  <title>Source: libs/product.js</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-banner" role="banner">
+        </div>
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <h1>Source: libs/product.js</h1>
+          </header>
+          <article>
+            <pre class="prettyprint linenums"><code>&#x27;use strict&#x27;;
+
+/**
+ * @desc Class representation of a product
+ */
+class Product {
+  /**
+   * @desc Create a product
+   * @param {Object} data The data used to create this instance
+   */
+  constructor (data) {
+    this.productName &#x3D; data.product_name;
+    this.manufacturer &#x3D; data.manufacturer;
+    this.model &#x3D; data.model;
+    this.family &#x3D; data.family || null;
+    this.announcedDate &#x3D; new Date(data[&#x27;announced-date&#x27;]);
+    this.listings &#x3D; [];
+    this.listingGuesses &#x3D; [];
+  }
+
+  /**
+   * @desc Getter for the terms from the family property
+   * @returns {String[]}  Array of terms generated from family property
+   */
+  parsedFamilyTerms () {
+    return this.family ? parsedTerms(this.family) : [];
+  }
+
+  /**
+   * @desc Getter for the terms from the model property
+   * @returns {String[]}  Array of terms generated from model property
+   */
+  parsedModelTerms () {
+    return parsedTerms(this.model);
+  }
+
+  /**
+   * @desc Getter for the terms from the productName property
+   * @returns {String[]} output Generated list of terms from productName property
+   */
+  parsedNameTerms () {
+    let regex &#x3D; /_/g;
+    let terms &#x3D; this.productName.toLowerCase().split(regex);
+    let output &#x3D; [];
+    terms.forEach(term &#x3D;&gt; {
+      let split &#x3D; term.split(&#x27;-&#x27;);
+      if (split.length &gt; 1) {
+        split.forEach(x &#x3D;&gt; output.push(x));
+        output.push(split.join(&#x27;&#x27;));
+      } else {
+        output.push(term);
+      }
+    });
+    return output;
+  }
+
+  /**
+   * @desc Getter for the manufacturer of this product instance
+   * @return {String}  The lowercase name of the manufacturer for this product
+   */
+  getManufacturer () {
+    return this.manufacturer.toLowerCase();
+  }
+
+  /**
+   * @desc Getter for the name of this product instance
+   * @returns {String}  The lowercase version of the productName property
+   */
+  getName () {
+    return this.productName.toLowerCase();
+  }
+}
+
+/**
+ * @memberof Product
+ * @desc Function for parsing terms from the given input
+ * @param  {String} input The string to parse
+ * @return {String[]} output Array of parsed terms
+ */
+function parsedTerms (input) {
+  let output &#x3D; [];
+  let terms &#x3D; input.toLowerCase().split(&#x27; &#x27;);
+  terms.forEach(term &#x3D;&gt; {
+    let split &#x3D; term.split(&#x27;-&#x27;);
+    if (split.length &gt; 1) {
+      split.forEach(x &#x3D;&gt; output.push(x));
+      output.push(split.join(&#x27;&#x27;));
+    } else {
+      output.push(term);
+    }
+  });
+  return output;
+}
+
+module.exports &#x3D; Product;
+</code></pre>
+          </article>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>
