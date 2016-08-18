@@ -9,5 +9,5 @@ The idea behind this challenge is to take a list of `listings` and sort through 
 1. `$ mkdir my-solution`
 2. `$ cd my-solution`
 3. `$ git clone https://github.com/mikemimik/codechallenge-sortable.git ./`
-4. `$ npm install` **OR** `>$ npm install --only=prod`
+4. `$ npm install` **OR** `>$ npm install --only=prod` *(faster)*
 5. `$ npm start`
