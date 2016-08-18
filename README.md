@@ -11,3 +11,8 @@ The idea behind this challenge is to take a list of `listings` and sort through 
 3. `$ git clone https://github.com/mikemimik/codechallenge-sortable.git ./`
 4. `$ npm install` **OR** `>$ npm install --only=prod` *(faster)*
 5. `$ npm start`
+
+### Docs
+> (assuming all **Usage** steps have been done)
+
+1. `$ npm run generate-docs`
