@@ -3,10 +3,9 @@
 const nlp = require('nlp_compromise');
 
 /**
- * @module listing
  * @desc Class representing a listing
  */
-module.exports = class Listing {
+class Listing {
   /**
    * @desc Create a Listing
    * @param {Object} data The data used to create this instance
@@ -18,10 +17,10 @@ module.exports = class Listing {
     this.price = data.price;
     this.terms = [];
   }
+
   /**
-   * @memberof listing#
    * @desc Get a constructed object of the data used to create this instance
-   * @returns {Object} result The data used to create this instance
+   * @returns {Object} - The data used to create this instance
    */
   getData () {
     let result = {
@@ -32,10 +31,10 @@ module.exports = class Listing {
     };
     return result;
   }
+
   /**
-   * @memberof listing#
    * @desc Get simplified version of listed manufacturer name
-   * @returns {String}  The simplified version of the manufacturer's names
+   * @returns {String} - The simplified version of the manufacturer's names
    */
   simpleManufacturerName () {
     let name = null;
@@ -60,8 +59,8 @@ module.exports = class Listing {
       return this.manufacturer.toLowerCase();
     }
   }
+
   /**
-   * @instance
    * @desc Define terms from the title of the Listing
    * @returns {undefined}
    */
@@ -74,4 +73,6 @@ module.exports = class Listing {
       .map(term => term.toLowerCase());
     this.terms = termList;
   }
-};
+}
+
+module.exports = Listing;

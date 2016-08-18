@@ -1,11 +1,9 @@
 'use strict';
 
 /**
- * @class
- * @module Manufacturer
  * @desc Class representing a manufacturer
  */
-module.exports = class Manufacturer {
+class Manufacturer {
   /**
    * @desc Create a manufacturer
    * @param {String} name The name of the manufacturer
@@ -15,6 +13,7 @@ module.exports = class Manufacturer {
     this.multiWord = false;
     this.listings = [];
   }
+
   /**
    * @desc Setter function for if this manufacturer has more than one word
    *       in the name
@@ -23,11 +22,14 @@ module.exports = class Manufacturer {
   isMultiWord () {
     this.multiWord = true;
   }
+
   /**
    * @desc Getter function for the name of this manufacturer
-   * @returns {String}  The lowercase name of this manufacturer
+   * @returns {String} - The lowercase name of this manufacturer
    */
   getName () {
     return this.name.toLowerCase();
   }
-};
+}
+
+module.exports = Manufacturer;

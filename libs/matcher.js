@@ -9,11 +9,9 @@ const Fs = require('fs');
 const _ = require('lodash');
 
 /**
- * @class
- * @module Matcher
  * @desc Class representation of a matcher tool
  */
-module.exports = class Matcher {
+class Matcher {
   /**
    * @desc Create a matcher
    */
@@ -49,12 +47,11 @@ module.exports = class Matcher {
   }
 
   /**
-   * @instance
    * @desc Takes in an array of javascript objects of all the products
    *       to be used. Converts all the items into an instance of type
    *       Product.
    * @param {Object[]} data Array of objects
-   * @returns {Product[]}  Array of Product objects
+   * @returns {Product[]} - Array of Product objects
    */
   setProducts (data) {
     this.logger.setProducts('initiated');
@@ -72,12 +69,11 @@ module.exports = class Matcher {
   }
 
   /**
-   * @instance
    * @desc Takes in array of javascript objects of all the listings to
    *       be used. Converts all the items into an instances of type
    *       Listing.
    * @param {Object[]} data Array of objects
-   * @returns {Listing[]}  Array of Listing objects
+   * @returns {Listing[]} - Array of Listing objects
    */
   setListings (data) {
     this.logger.setListings('initiated');
@@ -95,7 +91,6 @@ module.exports = class Matcher {
   }
 
   /**
-   * @instance
    * @desc Create array of Manufacturer instances from list of products
    * @returns {undefined}
    */
@@ -131,7 +126,6 @@ module.exports = class Matcher {
   }
 
   /**
-   * @instance
    * @desc Initially matches each listings manufacturer value with the
    *       corresponding manufacturer instances created by
    *       `createManufacturers()`. Also creates a list of 'terms' on
@@ -166,7 +160,6 @@ module.exports = class Matcher {
   }
 
   /**
-   * @instance
    * @desc Goes through the unpaired listings and compares the
    *       intersection of the list of terms with a list of manufacturers.
    *       If the intersection has one (1) match, that listing is added
@@ -211,7 +204,6 @@ module.exports = class Matcher {
     });
   }
   /**
-   * @instance
    * @desc Goes through all of the products and gets their respective
    *       manufacturer. For each listing associated with that manufacturer
    *       intersect the terms from each listing, with the terms from
@@ -276,6 +268,10 @@ module.exports = class Matcher {
 
   // TODO: sort through listingGuesses
   // TODO: compare model/family against listing.defineTerms()
+  /**
+   * @desc info about 4th passStart
+   * @returns {undefined}
+   */
   forthPass () {
     this.logger.passStart('forth');
     // INFO: setup
@@ -382,6 +378,13 @@ module.exports = class Matcher {
     });
   }
 
+  /**
+   * @desc For each product, creates an item object which conform to the JSON
+   *       object spec for the challenge. Creates a file `results.txt` and
+   *       appends the `JSON.strinify` form of each of those item objects
+   *       to the file.
+   * @returns {undefined}
+   */
   resultFile () {
     this.logger.write('initiated');
     Async.each(this.products, (product, doneProduct) => {
@@ -403,8 +406,14 @@ module.exports = class Matcher {
       this.logger.write('completed');
     });
   }
-  // INFO: Below are helper functions attached to this object.
 
+  // INFO: Below are helper functions attached to this object.
+  /**
+   * @desc Returns a list of Manufacturer instances that have a name that matches
+   *       the given list in `data`.
+   * @param {String[]} data Array of manufacturer names
+   * @returns {Manufacturer[]} - An array of Manufacturer instances
+   */
   getManufacturers (data) {
     let output = [];
     data.forEach((name) => {
@@ -416,14 +425,6 @@ module.exports = class Matcher {
     });
     return output;
   }
+}
 
-  sortProducts (opt) {
-    if (!opt) { throw new Error('invalid function call'); }
-    return _.sortBy(this.products, opt);
-  }
-
-  orderProducts (order, opt) {
-    return _.orderBy(this.products, opt, order);
-  }
-
-};
+module.exports = Matcher;

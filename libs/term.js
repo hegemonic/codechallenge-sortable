@@ -1,11 +1,9 @@
 'use strict';
 
 /**
- * @class
- * @module Term
  * @desc Class representation of a term
  */
-module.exports = class Term {
+class Term {
   /**
    * @desc Create a term
    * @param {String} name The name of the term, which is just the string text
@@ -15,4 +13,6 @@ module.exports = class Term {
     this.name = name;
     this.lex = '';
   }
-};
+}
+
+module.exports = Term;

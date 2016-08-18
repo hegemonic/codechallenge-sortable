@@ -3,28 +3,28 @@
 const _ = require('lodash');
 
 /**
- * Returns an array of items
- * @param  {string} data    String context of read file
- * @return {string[]}       Array of strings
+ * @desc Returns an array of items
+ * @param  {String} data String context of read file
+ * @return {String[]} - Array of strings
  */
 exports.getArray = function getArray (data) {
   return data.split('\n');
 };
 
 /**
- * Returns a subset of the array data provided
- * @param {string[]} data [description]
- * @param {number} setSize  Size of subset
- * @return {string[]}   Subset array
+ * @desc Returns a subset of the array data provided
+ * @param {String[]} data Array of data to create a subset from
+ * @param {Number} setSize Size of subset
+ * @return {String[]} - Subset array
  */
 exports.getSubset = function getSubset (data, setSize) {
   return _.slice(data, 0, setSize);
 };
 
 /**
- * Returns javascript objects
- * @param  {string} data Array of JSON string objects
- * @return {Object}      Javascript object
+ * @desc Returns javascript objects
+ * @param  {String} data Array of JSON string objects
+ * @return {Object} - Javascript object
  */
 exports.convertToObj = function convertToObj (data) {
   try {

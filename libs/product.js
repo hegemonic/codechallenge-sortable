@@ -1,10 +1,9 @@
 'use strict';
 
 /**
- * @module product
  * @desc Class representation of a product
  */
-module.exports = class Product {
+class Product {
   /**
    * @desc Create a product
    * @param {Object} data The data used to create this instance
@@ -20,8 +19,6 @@ module.exports = class Product {
   }
 
   /**
-   * @instance
-   * @memberof product#
    * @desc Getter for the terms from the family property
    * @returns {String[]}  Array of terms generated from family property
    */
@@ -30,7 +27,6 @@ module.exports = class Product {
   }
 
   /**
-   * @instance
    * @desc Getter for the terms from the model property
    * @returns {String[]}  Array of terms generated from model property
    */
@@ -39,7 +35,6 @@ module.exports = class Product {
   }
 
   /**
-   * @instance
    * @desc Getter for the terms from the productName property
    * @returns {String[]} output Generated list of terms from productName property
    */
@@ -60,7 +55,6 @@ module.exports = class Product {
   }
 
   /**
-   * @instance
    * @desc Getter for the manufacturer of this product instance
    * @return {String}  The lowercase name of the manufacturer for this product
    */
@@ -69,17 +63,16 @@ module.exports = class Product {
   }
 
   /**
-   * @instance
    * @desc Getter for the name of this product instance
    * @returns {String}  The lowercase version of the productName property
    */
   getName () {
     return this.productName.toLowerCase();
   }
-};
+}
 
 /**
- * @instance
+ * @memberof Product
  * @desc Function for parsing terms from the given input
  * @param  {String} input The string to parse
  * @return {String[]} output Array of parsed terms
@@ -98,3 +91,5 @@ function parsedTerms (input) {
   });
   return output;
 }
+
+module.exports = Product;
