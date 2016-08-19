@@ -172,34 +172,26 @@ class Matcher {
    */
   secondPass () {
     this.logger.passStart('second');
-    let noMatch = 0; // TESTING
-    let oneMatch = 0; // TESTING
-    let multiMatch = 0; // TESTING
     let unpaired = [];
     let manufacturerList = this.manufacturers.map(x => x.name);
     Async.each(this.unpaired, (listing, doneListing) => {
       let intersection = _.intersection(manufacturerList, listing.terms);
       if (intersection.length === 0) {
         unpaired.push(listing);
-        noMatch++;
       }
       if (intersection.length === 1) {
         this.getManufacturers(intersection).forEach((manufacturer) => {
           manufacturer.listings.push(listing);
         });
-        oneMatch++;
       }
       if (intersection.length > 1) {
         this.getManufacturers(intersection).forEach((manufacturer) => {
           manufacturer.listings.push(listing);
         });
-        multiMatch++;
       }
       doneListing(null);
     }, (done) => {
       this.unpaired = unpaired;
-      // this.logger.test(`>> noMatch: ${noMatch}, oneMatch: ${oneMatch}, mutliMatch: ${multiMatch}`);
-      // this.logger.test('>> new unparied:', this.unpaired.length);
       this.logger.passEnd('second');
     });
   }
@@ -219,46 +211,25 @@ class Matcher {
    */
   thirdPass () {
     this.logger.passStart('third');
-    let noMatch = 0; // TESTING
-    let oneMatch = 0; // TESTING
-    let multiMatch = 0; // TESTING
-    // let product = this.products[4];
     Async.each(this.products, (product, doneProduct) => {
-      // this.logger.test('product name:', product.productName);
-      // this.logger.test('search terms:', product.parsedNameTerms().join(', '));
-      let manufacturer = this.getManufacturers(product.manufacturer.split())[0];
-      // this.logger.test('associated listings:', manufacturer.listings.length);
-      // if (product.productName === 'Fujifilm_FinePix_1500') {
-      //   this.logger.test('FUCKING FOUND IT');
-      // }
+      let manufacturer = this.getManufacturers(product.manufacturer.split()).pop();
       Async.each(manufacturer.listings, (listing, doneListing) => {
         let intersection = _.intersection(product.parsedNameTerms(), listing.terms);
         if (intersection.length === 0) {
-          noMatch++;
         }
         if (intersection.length === 1) {
-          // if (product.productName === 'Fujifilm_FinePix_1500') {
-          //   console.log(intersection, product.getManufacturer());
-          // }
           if (intersection[0] !== product.getManufacturer()) {
+            // INFO: intersection matched on something other than manufacturer name
             product.listingGuesses.push(listing);
           }
-          oneMatch++;
         }
         if (intersection.length > 1) {
           product.listingGuesses.push(listing);
-          multiMatch++;
         }
         doneListing(null);
       }, (err) => {
         if (err) console.log(err);
-        // this.logger.test(`${product.productName} >> noMatch: ${noMatch}, oneMatch: ${oneMatch}, mutliMatch: ${multiMatch}`);
-        // this.logger.test('--------------------------------------');
-        noMatch = 0; // TESTING
-        oneMatch = 0; // TESTING
-        multiMatch = 0; // TESTING
         doneProduct(null);
-        // console.log(product);
       });
     }, (err) => {
       if (err) console.log(err);
@@ -266,110 +237,60 @@ class Matcher {
     });
   }
 
-  // TODO: sort through listingGuesses
-  // TODO: compare model/family against listing.defineTerms()
   /**
-   * @desc info about 4th passStart
+   * @desc Goes through all of the products and for each listing in the
+   *       listingGuesses array determine if that listing belongs to the
+   *       product. If there is only one term generated from the `product.model`
+   *       property then attempt to use the term list from the `product.family`
+   *       property.
    * @returns {undefined}
    */
   forthPass () {
     this.logger.passStart('forth');
-    // INFO: setup
     let intersection = {};
-    // TESTING items
-    // let counts = { noMatch: 0, oneMatch: 0, multiMatch: 0 };
-    // let matches = {
-    //   model: Object.create(counts),
-    //   family: Object.create(counts),
-    //   both: Object.create(counts)
-    // };
-    let likelyMatch = 0;
     Async.each(this.products, (product, doneProduct) => {
-      // this.logger.test('product name:', product.getName());
-      // this.logger.test('product model:', product.model);
-      // this.logger.test('product model terms:', product.parsedModelTerms());
-      // this.logger.test('product family:', product.family);
-      // this.logger.test('product family terms:', product.parsedFamilyTerms());
-      // this.logger.test('product listing guesses:', product.listingGuesses.length);
       Async.each(product.listingGuesses, (listingGuess, doneListingGuess) => {
+        intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
         switch (product.parsedModelTerms().length) {
           case 1:
             // modelTermLength = 1
-            intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
             if (product.parsedFamilyTerms().length) {
               // familyTermLength = 1 || familyTermLength > 1
               intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
               if (intersection.model.length === 1 && intersection.family.length >= 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               }
             } else {
               // familyTermLength = 0
               if (intersection.model.length === 1) {
-                likelyMatch++;
+                // ∵ modelTerms.length === 1
+                // ∴ intersection.model.length must === 1
                 product.listings.push(listingGuess);
               }
             }
             break;
           default:
             // modelTermLength > 1
-            intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
             if (product.parsedFamilyTerms().length) {
               // familyTermLength = 1 || familyTermLength > 1
               intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
               if (intersection.model.length > 1 && intersection.family.length >= 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               } else if (intersection.model.length > 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               }
             } else {
               // familyTermLength = 0
               if (intersection.model.length > 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               }
             }
             break;
         }
-        // TESTING BELOW
-        // intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
-        // intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
-        // if (intersection.model.length === 0) {
-        //   matches.model.noMatch++;
-        //   if (intersection.family.length === 0) {
-        //     matches.both.noMatch++;
-        //   }
-        // }
-        // if (intersection.model.length === 1) {
-        //   matches.model.oneMatch++;
-        //   // this.logger.test('listingGuess', listingGuess);
-        //   if (intersection.family.length === 1) {
-        //     matches.both.oneMatch++;
-        //   }
-        // }
-        // if (intersection.model.length > 1) {
-        //   matches.model.multiMatch++;
-        //   if (intersection.family.length > 1) {
-        //     matches.both.multiMatch++;
-        //   }
-        // }
-        // if (intersection.family.length === 0) { matches.family.noMatch++; }
-        // if (intersection.family.length === 1) { matches.family.oneMatch++; }
-        // if (intersection.family.length > 1) { matches.family.multiMatch++; }
         doneListingGuess(null);
       }, (err) => {
         if (err) console.log(err);
         intersection = {};
-        // TESTING BELOW
-        // this.logger.test(`MODEL >> noMatch: ${matches.model.noMatch}, oneMatch: ${matches.model.oneMatch}, mutliMatch: ${matches.model.multiMatch}`);
-        // this.logger.test(`FAMILY >> noMatch: ${matches.family.noMatch}, oneMatch: ${matches.family.oneMatch}, mutliMatch: ${matches.family.multiMatch}`);
-        // this.logger.test(`BOTH >> noMatch: ${matches.both.noMatch}, oneMatch: ${matches.both.oneMatch}, mutliMatch: ${matches.both.multiMatch}`);
-        // this.logger.test(`LIKELY MATCHES >> ${likelyMatch}`);
-        // this.logger.test('--------------------------------------');
-        // matches = { model: Object.create(counts), family: Object.create(counts), both: Object.create(counts) };
-        likelyMatch = 0;
         doneProduct(null);
       });
     }, (err) => {
