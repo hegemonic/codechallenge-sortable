@@ -211,46 +211,24 @@ class Matcher {
    */
   thirdPass () {
     this.logger.passStart('third');
-    let noMatch = 0; // TESTING
-    let oneMatch = 0; // TESTING
-    let multiMatch = 0; // TESTING
-    // let product = this.products[4];
     Async.each(this.products, (product, doneProduct) => {
-      // this.logger.test('product name:', product.productName);
-      // this.logger.test('search terms:', product.parsedNameTerms().join(', '));
       let manufacturer = this.getManufacturers(product.manufacturer.split())[0];
-      // this.logger.test('associated listings:', manufacturer.listings.length);
-      // if (product.productName === 'Fujifilm_FinePix_1500') {
-      //   this.logger.test('FUCKING FOUND IT');
-      // }
       Async.each(manufacturer.listings, (listing, doneListing) => {
         let intersection = _.intersection(product.parsedNameTerms(), listing.terms);
         if (intersection.length === 0) {
-          noMatch++;
         }
         if (intersection.length === 1) {
-          // if (product.productName === 'Fujifilm_FinePix_1500') {
-          //   console.log(intersection, product.getManufacturer());
-          // }
           if (intersection[0] !== product.getManufacturer()) {
             product.listingGuesses.push(listing);
           }
-          oneMatch++;
         }
         if (intersection.length > 1) {
           product.listingGuesses.push(listing);
-          multiMatch++;
         }
         doneListing(null);
       }, (err) => {
         if (err) console.log(err);
-        // this.logger.test(`${product.productName} >> noMatch: ${noMatch}, oneMatch: ${oneMatch}, mutliMatch: ${multiMatch}`);
-        // this.logger.test('--------------------------------------');
-        noMatch = 0; // TESTING
-        oneMatch = 0; // TESTING
-        multiMatch = 0; // TESTING
         doneProduct(null);
-        // console.log(product);
       });
     }, (err) => {
       if (err) console.log(err);
