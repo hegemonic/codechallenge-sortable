@@ -172,34 +172,26 @@ class Matcher {
    */
   secondPass () {
     this.logger.passStart('second');
-    let noMatch = 0; // TESTING
-    let oneMatch = 0; // TESTING
-    let multiMatch = 0; // TESTING
     let unpaired = [];
     let manufacturerList = this.manufacturers.map(x => x.name);
     Async.each(this.unpaired, (listing, doneListing) => {
       let intersection = _.intersection(manufacturerList, listing.terms);
       if (intersection.length === 0) {
         unpaired.push(listing);
-        noMatch++;
       }
       if (intersection.length === 1) {
         this.getManufacturers(intersection).forEach((manufacturer) => {
           manufacturer.listings.push(listing);
         });
-        oneMatch++;
       }
       if (intersection.length > 1) {
         this.getManufacturers(intersection).forEach((manufacturer) => {
           manufacturer.listings.push(listing);
         });
-        multiMatch++;
       }
       doneListing(null);
     }, (done) => {
       this.unpaired = unpaired;
-      // this.logger.test(`>> noMatch: ${noMatch}, oneMatch: ${oneMatch}, mutliMatch: ${multiMatch}`);
-      // this.logger.test('>> new unparied:', this.unpaired.length);
       this.logger.passEnd('second');
     });
   }
