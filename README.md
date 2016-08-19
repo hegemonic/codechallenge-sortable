@@ -137,7 +137,7 @@ array of `listing` objects. Each of the `items` is then appended to the
 1. `$ mkdir my-solution`
 2. `$ cd my-solution`
 3. `$ git clone https://github.com/mikemimik/codechallenge-sortable.git ./`
-4. `$ npm install` **OR** `>$ npm install --only=prod` *(faster)*
+4. `$ npm install` **OR** `$ npm install --only=prod` *(faster)*
 5. `$ npm start`
 
 ## Docs
