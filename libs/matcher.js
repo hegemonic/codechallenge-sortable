@@ -250,10 +250,10 @@ class Matcher {
     let intersection = {};
     Async.each(this.products, (product, doneProduct) => {
       Async.each(product.listingGuesses, (listingGuess, doneListingGuess) => {
+        intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
         switch (product.parsedModelTerms().length) {
           case 1:
             // modelTermLength = 1
-            intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
             if (product.parsedFamilyTerms().length) {
               // familyTermLength = 1 || familyTermLength > 1
               intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
@@ -271,7 +271,6 @@ class Matcher {
             break;
           default:
             // modelTermLength > 1
-            intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
             if (product.parsedFamilyTerms().length) {
               // familyTermLength = 1 || familyTermLength > 1
               intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
