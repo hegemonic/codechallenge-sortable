@@ -219,6 +219,7 @@ class Matcher {
         }
         if (intersection.length === 1) {
           if (intersection[0] !== product.getManufacturer()) {
+            // INFO: intersection matched on something other than manufacturer name
             product.listingGuesses.push(listing);
           }
         }
@@ -236,31 +237,18 @@ class Matcher {
     });
   }
 
-  // TODO: sort through listingGuesses
-  // TODO: compare model/family against listing.defineTerms()
   /**
-   * @desc info about 4th passStart
+   * @desc Goes through all of the products and for each listing in the
+   *       listingGuesses array determine if that listing belongs to the
+   *       product. If there is only one term generated from the `product.model`
+   *       property then attempt to use the term list from the `product.family`
+   *       property.
    * @returns {undefined}
    */
   forthPass () {
     this.logger.passStart('forth');
-    // INFO: setup
     let intersection = {};
-    // TESTING items
-    // let counts = { noMatch: 0, oneMatch: 0, multiMatch: 0 };
-    // let matches = {
-    //   model: Object.create(counts),
-    //   family: Object.create(counts),
-    //   both: Object.create(counts)
-    // };
-    let likelyMatch = 0;
     Async.each(this.products, (product, doneProduct) => {
-      // this.logger.test('product name:', product.getName());
-      // this.logger.test('product model:', product.model);
-      // this.logger.test('product model terms:', product.parsedModelTerms());
-      // this.logger.test('product family:', product.family);
-      // this.logger.test('product family terms:', product.parsedFamilyTerms());
-      // this.logger.test('product listing guesses:', product.listingGuesses.length);
       Async.each(product.listingGuesses, (listingGuess, doneListingGuess) => {
         switch (product.parsedModelTerms().length) {
           case 1:
@@ -270,13 +258,13 @@ class Matcher {
               // familyTermLength = 1 || familyTermLength > 1
               intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
               if (intersection.model.length === 1 && intersection.family.length >= 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               }
             } else {
               // familyTermLength = 0
               if (intersection.model.length === 1) {
-                likelyMatch++;
+                // ∵ modelTerms.length === 1
+                // ∴ intersection.model.length must === 1
                 product.listings.push(listingGuess);
               }
             }
@@ -288,58 +276,22 @@ class Matcher {
               // familyTermLength = 1 || familyTermLength > 1
               intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
               if (intersection.model.length > 1 && intersection.family.length >= 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               } else if (intersection.model.length > 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               }
             } else {
               // familyTermLength = 0
               if (intersection.model.length > 1) {
-                likelyMatch++;
                 product.listings.push(listingGuess);
               }
             }
             break;
         }
-        // TESTING BELOW
-        // intersection.model = _.intersection(product.parsedModelTerms(), listingGuess.terms);
-        // intersection.family = _.intersection(product.parsedFamilyTerms(), listingGuess.terms);
-        // if (intersection.model.length === 0) {
-        //   matches.model.noMatch++;
-        //   if (intersection.family.length === 0) {
-        //     matches.both.noMatch++;
-        //   }
-        // }
-        // if (intersection.model.length === 1) {
-        //   matches.model.oneMatch++;
-        //   // this.logger.test('listingGuess', listingGuess);
-        //   if (intersection.family.length === 1) {
-        //     matches.both.oneMatch++;
-        //   }
-        // }
-        // if (intersection.model.length > 1) {
-        //   matches.model.multiMatch++;
-        //   if (intersection.family.length > 1) {
-        //     matches.both.multiMatch++;
-        //   }
-        // }
-        // if (intersection.family.length === 0) { matches.family.noMatch++; }
-        // if (intersection.family.length === 1) { matches.family.oneMatch++; }
-        // if (intersection.family.length > 1) { matches.family.multiMatch++; }
         doneListingGuess(null);
       }, (err) => {
         if (err) console.log(err);
         intersection = {};
-        // TESTING BELOW
-        // this.logger.test(`MODEL >> noMatch: ${matches.model.noMatch}, oneMatch: ${matches.model.oneMatch}, mutliMatch: ${matches.model.multiMatch}`);
-        // this.logger.test(`FAMILY >> noMatch: ${matches.family.noMatch}, oneMatch: ${matches.family.oneMatch}, mutliMatch: ${matches.family.multiMatch}`);
-        // this.logger.test(`BOTH >> noMatch: ${matches.both.noMatch}, oneMatch: ${matches.both.oneMatch}, mutliMatch: ${matches.both.multiMatch}`);
-        // this.logger.test(`LIKELY MATCHES >> ${likelyMatch}`);
-        // this.logger.test('--------------------------------------');
-        // matches = { model: Object.create(counts), family: Object.create(counts), both: Object.create(counts) };
-        likelyMatch = 0;
         doneProduct(null);
       });
     }, (err) => {
