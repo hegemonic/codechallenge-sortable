@@ -212,7 +212,7 @@ class Matcher {
   thirdPass () {
     this.logger.passStart('third');
     Async.each(this.products, (product, doneProduct) => {
-      let manufacturer = this.getManufacturers(product.manufacturer.split())[0];
+      let manufacturer = this.getManufacturers(product.manufacturer.split()).pop();
       Async.each(manufacturer.listings, (listing, doneListing) => {
         let intersection = _.intersection(product.parsedNameTerms(), listing.terms);
         if (intersection.length === 0) {
