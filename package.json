@@ -17,7 +17,7 @@
   "license": "MIT",
   "devDependencies": {
     "jsdoc": "^3.4.0",
-    "jsdoc-baseline": "https://github.com/hegemonic/baseline/tarball/master",
+    "jsdoc-baseline": "https://github.com/hegemonic/baseline/tarball/222e13a",
     "semistandard": "^8.0.0"
   },
   "dependencies": {
